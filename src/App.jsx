@@ -14,6 +14,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [activePage, setActivePage] = useState('dashboard');
   const [theme, setTheme] = useState(userSettings.theme || 'light');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Update theme when settings change
   useEffect(() => {
@@ -90,9 +91,25 @@ function App() {
 
   return (
     <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
-      <Header currentUser={currentUser} onLogout={handleLogout} />
+      <Header
+        currentUser={currentUser}
+        onLogout={handleLogout}
+        onMenuToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
       <div className="flex flex-1">
-        <Sidebar activePage={activePage} onPageChange={handlePageChange} currentUser={currentUser} />
+        {/* Mobile sidebar overlay */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          ></div>
+        )}
+        
+        {/* Sidebar - hidden on mobile by default, shown when isSidebarOpen is true */}
+        <div className={`fixed md:relative z-50 md:z-auto inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out`}>
+          <Sidebar activePage={activePage} onPageChange={handlePageChange} currentUser={currentUser} />
+        </div>
+        
         <main className="flex-1 p-6 overflow-auto">
           {renderActivePage()}
         </main>

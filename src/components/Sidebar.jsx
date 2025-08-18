@@ -16,7 +16,7 @@ const Sidebar = ({ activePage, onPageChange, currentUser }) => {
     : menuItems;
 
   return (
-    <aside className="bg-white shadow-sm w-64 hidden md:block">
+    <aside className="bg-white shadow-sm w-64 h-full">
       <div className="p-6">
         <nav className="mt-4">
           <ul className="space-y-1">
