@@ -1,0 +1,104 @@
+import React, { useState, useEffect } from 'react';
+import Header from './components/Header';
+import Sidebar from './components/Sidebar';
+import Dashboard from './components/Dashboard';
+import Login from './components/Login';
+import WithdrawalHistory from './components/WithdrawalHistory';
+import TrendingProducts from './components/TrendingProducts';
+import AdminPanel from './components/AdminPanel';
+import Settings from './components/Settings';
+import { updateSalesData, userSettings } from './data/dataStore';
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [activePage, setActivePage] = useState('dashboard');
+  const [theme, setTheme] = useState(userSettings.theme || 'light');
+
+  // Update theme when settings change
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Get updated settings from localStorage
+      const storedSettings = localStorage.getItem('dashboardSettings');
+      if (storedSettings) {
+        const parsedSettings = JSON.parse(storedSettings);
+        setTheme(parsedSettings.theme || 'light');
+      } else {
+        setTheme('light');
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Check if user is already logged in from localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+      
+      // Update sales data on each login/refresh
+      updateSalesData();
+    }
+  }, []);
+
+  const handleLogin = (userData) => {
+    setCurrentUser(userData);
+    setIsAuthenticated(true);
+    localStorage.setItem('user', JSON.stringify(userData));
+    
+    // Update sales data on login
+    updateSalesData();
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+  };
+
+  const handlePageChange = (page) => {
+    setActivePage(page);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  const renderActivePage = () => {
+    // Check if user is admin for admin panel access
+    const isAdmin = currentUser && currentUser.role === 'admin';
+    
+    switch (activePage) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'trending-products':
+        return <TrendingProducts />;
+      case 'withdrawal-history':
+        return <WithdrawalHistory />;
+      case 'admin-panel':
+        // Only allow admin users to access the admin panel
+        return isAdmin ? <AdminPanel /> : <Dashboard />;
+      case 'settings':
+        return <Settings />;
+      default:
+        return <Dashboard />;
+    }
+  };
+
+  return (
+    <div className={`flex flex-col min-h-screen ${theme === 'dark' ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+      <Header currentUser={currentUser} onLogout={handleLogout} />
+      <div className="flex flex-1">
+        <Sidebar activePage={activePage} onPageChange={handlePageChange} currentUser={currentUser} />
+        <main className="flex-1 p-6 overflow-auto">
+          {renderActivePage()}
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
