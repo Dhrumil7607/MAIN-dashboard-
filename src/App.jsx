@@ -78,7 +78,7 @@ function App() {
       case 'trending-products':
         return <TrendingProducts />;
       case 'withdrawal-history':
-        return <WithdrawalHistory />;
+        return <WithdrawalHistory currentUser={currentUser} />;
       case 'admin-panel':
         // Only allow admin users to access the admin panel
         return isAdmin ? <AdminPanel /> : <Dashboard />;

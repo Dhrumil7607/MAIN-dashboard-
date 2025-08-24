@@ -23,8 +23,10 @@ const getStoredProducts = () => {
 // Empty withdrawal history as requested
 const initialWithdrawalHistory = [];
 
-const getStoredWithdrawalHistory = () => {
-  const storedHistory = localStorage.getItem('withdrawalHistory');
+const getStoredWithdrawalHistory = (userEmail) => {
+  if (!userEmail) return [...initialWithdrawalHistory];
+  
+  const storedHistory = localStorage.getItem(`withdrawalHistory_${userEmail}`);
   if (storedHistory) {
     try {
       return JSON.parse(storedHistory);
@@ -97,9 +99,11 @@ const saveProducts = () => {
 };
 
 // Save withdrawal history to localStorage
-const saveWithdrawalHistory = () => {
+const saveWithdrawalHistory = (userEmail) => {
+  if (!userEmail) return;
+  
   try {
-    localStorage.setItem('withdrawalHistory', JSON.stringify(withdrawalHistory));
+    localStorage.setItem(`withdrawalHistory_${userEmail}`, JSON.stringify(withdrawalHistory));
   } catch (e) {
     console.error('Error saving withdrawal history to localStorage:', e);
   }
@@ -221,17 +225,23 @@ const generateWithdrawalId = () => {
 /**
  * Add new withdrawal to history
  */
-const addWithdrawal = (amount) => {
+const addWithdrawal = (amount, bankAccount, userEmail) => {
   const newWithdrawal = {
     id: generateWithdrawalId(),
     amount: parseFloat(amount),
     date: new Date().toISOString().split('T')[0],
     status: 'Pending',
-    method: 'IMPS/NEFT'
+    method: 'IMPS/NEFT',
+    bankAccount: bankAccount || {
+      accountNumber: 'XXXXXX1234',
+      accountHolderName: 'John Doe',
+      bankName: 'State Bank of India',
+      ifscCode: 'SBIN0002499'
+    }
   };
   
   withdrawalHistory = [newWithdrawal, ...withdrawalHistory];
-  saveWithdrawalHistory();
+  saveWithdrawalHistory(userEmail);
   
   // Deduct withdrawal amount from balance
   const currentBalance = getBalance();
